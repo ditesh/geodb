@@ -1,3 +1,0 @@
-service API {
-    rpc Write(LatLng, Blob) returns () {}
-}

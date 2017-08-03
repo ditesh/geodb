@@ -1,0 +1,20 @@
+syntax = "proto3";
+package api;
+
+// API definition
+service API {
+    rpc Write(WriteRequest) returns (Empty) {}
+    rpc Read(Point) returns (WriteRequest) {}
+}
+
+message Empty {}
+
+message Point {
+  int32 lat = 1;
+  int32 lng = 2;
+}
+
+message WriteRequest {
+    Point latlng = 1;
+    string blob = 2;
+}

@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"geodb/server"
+	"geodb/api"
 	"log"
 	"os"
 )
@@ -14,17 +13,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	s := &server.Server{
-		Config: os.Args[1],
+	s := &api.Server{
+		ConfigFile: os.Args[1],
 	}
 
 	if err := s.ParseConfig(); err != nil {
-		log.Fatalf("unable to parse config file: %n", err)
+		log.Fatalf("unable to parse config file: (%s)", err)
 		os.Exit(2)
 	}
 
 	if err := s.Start(); err != nil {
-		log.Fatalf("failed to listen: %n", err)
+		log.Fatalf("failed to listen: (%s)", err)
 		os.Exit(2)
 	}
 

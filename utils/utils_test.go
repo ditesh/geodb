@@ -4,25 +4,28 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"testing"
 )
 
 func TestExists(t *testing.T) {
 
-	if ok, err := Exists(""); ok {
-		t.Error("empty string path should not exist but did:", err)
+	var tests = []struct {
+		in  string
+		out bool
+	}{
+		{"", false},
+		{".", true},
+		{"I43JSRnnGwzWFJn0TbIWRJW6TddKdMaspC2bENRC", false},
+		{"../utils", true},
 	}
 
-	if ok, err := Exists("/"); !ok {
-		t.Error("/ should exist but did not:", err)
-	}
+	for _, tt := range tests {
 
-	if ok, err := Exists("I43JSRnnGwzWFJn0TbIWRJW6TddKdMaspC2bENRC"); ok {
-		t.Error("random string path should not exist but did:", err)
-	}
+		if ok, _ := Exists(tt.in); ok != tt.out {
+			t.Error("expected \"" + tt.in + " existance to be " + strconv.FormatBool(tt.out) + " but got " + strconv.FormatBool(ok) + " instead")
+		}
 
-	if ok, err := Exists("../utils"); !ok {
-		t.Error("utils path should exist but did not:", err)
 	}
 
 	// Test dir setup

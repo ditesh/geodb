@@ -1,0 +1,11 @@
+{
+    "server": {
+       "port": 12345
+    },
+   "datapath": "/Users/ditesh/src/geodb/datadir",
+   "logger": {
+       "type": "file",
+       "path": "/Users/ditesh/src/geodb/logs",
+       "level": "DEBUG"
+   }
+}

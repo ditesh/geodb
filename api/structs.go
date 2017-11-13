@@ -1,12 +1,9 @@
 package api
 
+import "geodb/config"
+
 type wrapper struct{}
 
 type Server struct {
-	ConfigFile string
-	config     Config
-}
-
-type Config struct {
-	Port int
+	Config config.APIServerConfig
 }

@@ -12,9 +12,10 @@ message Empty {}
 message Point {
   int32 lat = 1;
   int32 lng = 2;
+  int32 elv = 3;
 }
 
 message WriteRequest {
-    Point latlng = 1;
+    Point p = 1;
     string blob = 2;
 }

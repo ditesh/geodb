@@ -29,7 +29,7 @@ func main() {
 	defer conn.Close()
 
 	c := api.NewAPIClient(conn)
-	_, err = c.Write(context.Background(), &api.WriteRequest{Latlng: p, Blob: "this is the potato"})
+	_, err = c.Write(context.Background(), &api.WriteRequest{P: p, Blob: "this is the potato"})
 
 	if err != nil {
 		log.Fatalf("could not connect: (%v)", err)

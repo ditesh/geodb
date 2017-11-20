@@ -26,23 +26,33 @@ func (s *wrapper) Write(ctx context.Context, in *WriteRequest) (*Empty, error) {
 
 	storage.WritePoint(p)
 	return &Empty{}, nil
+
+}
+
+func listen(port int) (net.Listener, error) {
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Info("listening on ", port)
+	return lis, nil
+
 }
 
 func (s *Server) Start() error {
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", s.Config.Port))
+	lis, err := listen(s.Config.Port)
 
 	if err != nil {
 		return err
 	}
 
-	logger.Info("listening on", s.Config.Port)
-
 	g := grpc.NewServer()
 	RegisterAPIServer(g, &wrapper{})
 
-	err = g.Serve(lis)
-
-	return err
+	return g.Serve(lis)
 
 }

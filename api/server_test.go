@@ -1,21 +1,37 @@
 package api
 
 import (
+	"geodb/config"
+	"geodb/logger"
 	"testing"
 
 	context "golang.org/x/net/context"
 )
 
-func TestStart(t *testing.T) {
+func TestListen(t *testing.T) {
 
-	s := &Server{
-		Config{
-			Port: 0,
-		},
+	logger.Configure(config.LoggerConfig{
+		Type: "discard",
+	})
+
+	if lis, err := listen(-1); err == nil {
+		lis.Close()
+		t.Error("expected an error but didn't receive one")
 	}
 
-	s.Start()
+	if lis, err := listen(1); err == nil {
+		lis.Close()
+		t.Error("expected an error but didn't receive one")
+	}
 
+	// Random high port
+	lis, err := listen(12311)
+
+	if err != nil {
+		t.Error("did not expect an error but received one")
+	} else {
+		lis.Close()
+	}
 }
 
 func TestWrite(t *testing.T) {

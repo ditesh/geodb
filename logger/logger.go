@@ -3,6 +3,7 @@ package logger
 import (
 	"errors"
 	"geodb/config"
+	"io/ioutil"
 	"log"
 	"os"
 )
@@ -20,6 +21,10 @@ func Configure(c config.LoggerConfig) error {
 		}
 
 		logger = log.New(fd, "", log.Ldate|log.Ltime|log.Lshortfile)
+
+	} else if c.Type == "discard" {
+
+		logger = log.New(ioutil.Discard, "", log.Ldate|log.Ltime|log.Lshortfile)
 
 	} else {
 		return errors.New("none file logging types don't exist yet")

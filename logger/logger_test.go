@@ -50,7 +50,7 @@ func runTests(tests []tableTests, t *testing.T) {
 func TestConfigure(t *testing.T) {
 
 	// Test dir setup
-	dir, err := ioutil.TempDir("", "config-test")
+	dir, err := ioutil.TempDir("", "configtest")
 
 	if err != nil {
 		t.Fatal("unable to create temp dir")
@@ -63,6 +63,7 @@ func TestConfigure(t *testing.T) {
 		{[]string{"file", "", ""}, false},
 		{[]string{"file", "", "debug"}, false},
 		{[]string{"file", dir, "debug"}, true},
+		{[]string{"discard", "", "debug"}, true},
 	}
 
 	runTests(tests, t)

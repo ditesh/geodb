@@ -18,7 +18,11 @@ func TestInit(t *testing.T) {
 
 	defer func() {
 		for _, dir := range tmpdirs {
-			os.RemoveAll(dir)
+			err := os.RemoveAll(dir)
+
+			if err != nil {
+				t.Errorf("unable to remove test dir: %s", dir)
+			}
 		}
 	}()
 
@@ -64,9 +68,25 @@ func TestInitMetadata(t *testing.T) {
 	tmpfile := tmpfd.Name()
 
 	defer func() {
-		tmpfd.Close()
-		os.RemoveAll(tmpdir)
-		os.RemoveAll(tmpfile)
+
+		err := tmpfd.Close()
+
+		if err != nil {
+			t.Error("unable to close tmpfd")
+		}
+
+		err = os.RemoveAll(tmpdir)
+
+		if err != nil {
+			t.Errorf("unable to removeall: %s", tmpdir)
+		}
+
+		err = os.RemoveAll(tmpfile)
+
+		if err != nil {
+			t.Errorf("unable to removeall: %s", tmpdir)
+		}
+
 	}()
 
 	tests := []struct {
@@ -90,11 +110,36 @@ func TestInitMetadata(t *testing.T) {
 
 func TestWritePoint(t *testing.T) {
 
-	p := structs.Point{}
+	dirs, err := utils.CreateTestDirs(1, "storage")
 
-	retval := WritePoint(p)
+	if err != nil {
+		t.Fatal("unable to create tempdir")
+	}
 
-	if retval != nil {
+	err = Init(dirs[0])
+	defer func() {
+
+		err := os.RemoveAll(dirs[0])
+
+		if err != nil {
+			t.Error("unable to remove tempdir")
+		}
+
+	}()
+
+	if err != nil {
+		t.Fatal("unable to initialise tempdir")
+	}
+
+	p := structs.Point{
+		Lat: 10,
+		Lng: 10,
+		Elv: 10,
+	}
+
+	err = WritePoint(p)
+
+	if err != nil {
 		t.Error("invalid return value")
 	}
 

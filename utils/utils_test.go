@@ -19,8 +19,19 @@ func TestFileExists(t *testing.T) {
 	tmpfile := tmpfd.Name()
 
 	defer func() {
-		tmpfd.Close()
-		os.Remove(tmpfile)
+
+		err := tmpfd.Close()
+
+		if err != nil {
+			t.Error("unable to close tmpfd")
+		}
+
+		err = os.Remove(tmpfile)
+
+		if err != nil {
+			t.Errorf("unable to remove tmpfile: %s", tmpfile)
+		}
+
 	}()
 
 	tests := []structs.TableTest{
@@ -47,7 +58,11 @@ func TestDirExists(t *testing.T) {
 	}
 
 	defer func() {
-		os.RemoveAll(tmpdir)
+		err := os.RemoveAll(tmpdir)
+
+		if err != nil {
+			t.Errorf("unable to removall tmpdir: %s", tmpdir)
+		}
 	}()
 
 	tests := []structs.TableTest{

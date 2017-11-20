@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"geodb/structs"
 	"io/ioutil"
 	"os"
@@ -38,7 +39,9 @@ func CreateTestDirs(n int, prefix string) ([]string, error) {
 		if err != nil {
 
 			for _, dir := range retval {
-				os.RemoveAll(dir)
+				if err := os.RemoveAll(dir); err != nil {
+					fmt.Println("unable to remove test dirs")
+				}
 			}
 		}
 

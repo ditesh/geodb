@@ -9,73 +9,34 @@ import (
 
 var store *Store
 
-/*
-func walWrite(data string) error {
-	return errors.New("not implemented")
-}
-
-func writeData(p structs.Point) (int, error) {
+func writeData(data []byte) error {
 
 	store.Lock()
 	defer func() {
 		store.Unlock()
 	}()
 
-	data, err := encodePoint(p)
+	written, err := store.fd.Write(data)
+	store.metadata.lastpos += uint64(written)
 
-	if err != nil {
-		return 0, err
-	}
-
-	return store.fd.Write(data)
+	return err
 
 }
-
-func updateIdx(p structs.Point) error {
-	return errors.New("not implemented")
-}
-
-func updateCaches(p structs.Point) error {
-	return errors.New("not implemented")
-}
-*/
 
 func WritePoint(p structs.Point) error {
 
+	// Serialize point to a sequence of bytes
+	data, err := encodePoint(p)
+
+	if err != nil {
+		return err
+	}
+
+	if err := writeData(data); err != nil {
+		return err
+	}
+
 	return nil
-
-	/*
-		// We love locks :allthethings:
-		store.Lock()
-
-		// Serialize point to binary encoding
-		data, err := serializePoint(p) // serialize to binary
-
-		if err != nil {
-			return err
-		}
-
-		// write to WAL
-		if err := walWrite(data); err != nil {
-			return err
-		}
-
-		if err := dataWrite(data); err != nil {
-			return err
-		}
-
-		// TODO: we need to figure out how to write to index
-		if err := idxWrite(p); err != nil {
-			return err
-		}
-
-		if err := updateCaches(p); err != nil {
-			return err
-		}
-
-		store.Unlock()
-		return nil
-	*/
 }
 
 func Init(path string) error {
@@ -86,11 +47,21 @@ func Init(path string) error {
 		return err
 	}
 
+	// O_CREATE: create a file if non-exists
+	// O_RDWR: open the file in read-write mode
 	fd, err := os.OpenFile(path+"/data", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
 
 	if err != nil {
 		return err
 	}
+
+	pos, err := fd.Seek(0, 0)
+
+	if err != nil {
+		return err
+	}
+
+	metadata.lastpos = uint64(pos)
 
 	store = &Store{
 		fd:       fd,

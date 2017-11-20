@@ -15,10 +15,7 @@ const (
 
 func main() {
 
-	p := &api.Point{
-		Lat: 1,
-		Lng: 1,
-	}
+	p := &api.Point{}
 
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
@@ -26,7 +23,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
-	defer conn.Close()
+	defer func() {
+		err := conn.Close()
+
+		if err != nil {
+			log.Fatal("unable to close connection")
+		}
+	}()
 
 	c := api.NewAPIClient(conn)
 	_, err = c.Write(context.Background(), &api.WriteRequest{P: p, Blob: "this is the potato"})

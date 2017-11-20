@@ -24,7 +24,12 @@ func (s *wrapper) Write(ctx context.Context, in *WriteRequest) (*Empty, error) {
 		Elv: in.P.Elv,
 	}
 
-	storage.WritePoint(p)
+	err := storage.WritePoint(p)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &Empty{}, nil
 
 }

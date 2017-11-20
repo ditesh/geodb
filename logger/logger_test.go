@@ -81,7 +81,11 @@ func TestConfigure(t *testing.T) {
 	}
 
 	// Make temp dir unwriteable
-	os.Chmod(dir, 0400)
+	err = os.Chmod(dir, 0400)
+
+	if err != nil {
+		t.Fatal("unable to make temp dir unwriteable")
+	}
 
 	tests = []tableTests{
 		{[]string{"file", dir, "debug"}, false},
@@ -89,7 +93,11 @@ func TestConfigure(t *testing.T) {
 	runTests(tests, t)
 
 	// Make temp dir writable again
-	os.Chmod(dir, 0777)
+	err = os.Chmod(dir, 0777)
+
+	if err != nil {
+		t.Fatal("unable to make temp dir unwriteable")
+	}
 
 	// Remove temporary dir
 	if err := os.RemoveAll(dir); err != nil {

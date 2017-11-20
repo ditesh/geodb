@@ -18,7 +18,7 @@ func (s *wrapper) Read(ctx context.Context, p *Point) (*WriteRequest, error) {
 
 func (s *wrapper) Write(ctx context.Context, in *WriteRequest) (*Empty, error) {
 
-	p := &structs.Point{
+	p := structs.Point{
 		Lat: in.P.Lat,
 		Lng: in.P.Lng,
 		Elv: in.P.Elv,

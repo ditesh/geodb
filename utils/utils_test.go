@@ -91,79 +91,6 @@ func TestWritable(t *testing.T) {
 	}
 }
 
-func TestExtractBits(t *testing.T) {
-
-	tests8 := []struct {
-		in     uint8
-		offset uint8
-		length uint8
-		out    uint32
-	}{
-		{0, 0, 0, 0},
-		{0, 1, 0, 0},
-		{0, 0, 1, 0},
-		{8, 1, 0, 0},
-		{8, 2, 0, 0},
-		{8, 0, 1, 0},
-		{8, 0, 2, 0},
-		{8, 0, 3, 0},
-		{8, 0, 4, 0},
-		{10, 2, 0, 0},
-		{11, 2, 0, 0},
-		{10, 0, 2, 0},
-		{11, 0, 2, 0},
-		{10, 2, 1, 0},
-		{11, 2, 1, 0},
-		{10, 1, 2, 0},
-		{11, 1, 2, 0},
-		{21, 2, 0, 0},
-		{21, 2, 1, 0},
-		{29, 2, 1, 0},
-		{29, 1, 2, 0},
-	}
-
-	for _, tt := range tests8 {
-
-		if bits, _ := ExtractBits(tt.in, tt.offset, tt.length); uint32(bits.(uint8)) != tt.out {
-
-			t.Errorf("in: %d, offset: %d, length: %d, exp: %d, got: %d", tt.in, tt.offset, tt.length, tt.out, bits)
-
-		}
-	}
-
-	tests32 := []struct {
-		in     uint32
-		offset uint8
-		length uint8
-		out    uint32
-	}{
-		{100000000, 7, 5, 31},
-		{1171645696, 12, 4, 5},
-	}
-
-	for _, tt := range tests32 {
-
-		if bits, _ := ExtractBits(tt.in, tt.offset, tt.length); uint32(bits.(uint32)) != tt.out {
-			t.Errorf("in: %d, offset: %d, length: %d, exp: %d, got: %d", tt.in, tt.offset, tt.length, tt.out, bits)
-		}
-	}
-
-	unsupportedTests := []struct {
-		in     uint16
-		offset uint8
-		length uint8
-		out    bool
-	}{
-		{1234, 1, 5, true},
-	}
-
-	for _, tt := range unsupportedTests {
-		if _, err := ExtractBits(tt.in, tt.offset, tt.length); (err == nil) == true {
-			t.Errorf("in: %d, offset: %d, length: %d, expected errors but received none", tt.in, tt.offset, tt.length)
-		}
-	}
-}
-
 func TestRunTableTests(t *testing.T) {
 
 	tested := false
@@ -183,6 +110,23 @@ func TestRunTableTests(t *testing.T) {
 
 	if tested == false {
 		t.Error("error function was not called")
+	}
+
+}
+
+func TestCreateTestDirs(t *testing.T) {
+
+	dirs, err := CreateTestDirs(10, "utilstest")
+
+	if err != nil {
+		t.Fatal("expected no errors but received one")
+	}
+
+	for _, dir := range dirs {
+
+		if stat, err := os.Stat(dir); err != nil || !stat.IsDir() {
+			t.Errorf("Received %s but its not a valid directory", dir)
+		}
 	}
 
 }

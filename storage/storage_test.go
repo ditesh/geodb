@@ -1,28 +1,12 @@
 package storage
 
 import (
+	"geodb/structs"
 	"geodb/utils"
 	"io/ioutil"
 	"os"
 	"testing"
 )
-
-func Testvalidate(t *testing.T) {
-
-	t.Skip()
-	/*
-		tests := &structs.TableTests{
-			{"", false},
-			{".", true},
-			{"I43JSRnnGwzWFJn0TbIWRJW6TddKdMaspC2bENRC", false},
-			{"../storage", true},
-		}
-
-		RunTableTests(tests, t, func(input string) bool {
-			return validate(input)
-		})
-	*/
-}
 
 func TestInit(t *testing.T) {
 
@@ -100,6 +84,18 @@ func TestInitMetadata(t *testing.T) {
 			t.Errorf("in: '%s', exp: %t, out: %t", tt.in, tt.exp, !tt.exp)
 		}
 
+	}
+
+}
+
+func TestWritePoint(t *testing.T) {
+
+	p := structs.Point{}
+
+	retval := WritePoint(p)
+
+	if retval != nil {
+		t.Error("invalid return value")
 	}
 
 }

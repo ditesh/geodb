@@ -124,7 +124,3 @@ func TestInfo(t *testing.T) {
 	}
 
 }
-
-func Testvalidate(t *testing.T) {
-
-}

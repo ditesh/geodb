@@ -1,31 +1,30 @@
 package storage
 
 import (
-	"fmt"
-	"geodb/utils"
+	"math"
 )
 
-func extract8Bits(num uint8, offset uint8, length uint8) uint8 {
+// extract8Bits extracts a set number of bits from an 8-bit number
+// offset is determined from the left (ie leftmost bit is bit 0)
+// offset 0 means start from bit 0
+func extract8Bits(num int8, offset uint8, length uint8) uint8 {
 
-	retval, err := utils.ExtractBits(uint8(num), offset, length)
-
-	if err != nil {
-		fmt.Println(err, offset, length)
-		panic("invalid bit extraction")
+	if length == 0 || length > 8 || offset > 7 {
+		panic("invalid length or offset")
 	}
 
-	return retval.(uint8)
+	return uint8((uint8(num) & uint8(math.Pow(2, float64(8-offset))-1)) >> (8 - offset - length))
 
 }
 
+// extract32Bits extracts a set number of bits from an 32-bit number
+// offset is determined from the left (ie leftmost bit is bit 0)
 func extract32Bits(num int32, offset uint8, length uint8) uint32 {
 
-	retval, err := utils.ExtractBits(uint32(num), offset, length)
-
-	if err != nil {
-		panic("invalid bit extraction")
+	if length == 0 || length > 32 || offset > 31 {
+		panic("invalid length or offset")
 	}
 
-	return retval.(uint32)
+	return uint32((uint32(num) & uint32(math.Pow(2, float64(32-offset))-1)) >> (32 - offset - length))
 
 }

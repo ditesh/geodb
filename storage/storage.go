@@ -2,7 +2,6 @@ package storage
 
 import (
 	"errors"
-	"fmt"
 	"geodb/structs"
 	"geodb/utils"
 	"os"
@@ -10,6 +9,7 @@ import (
 
 var store *Store
 
+/*
 func walWrite(data string) error {
 	return errors.New("not implemented")
 }
@@ -21,7 +21,12 @@ func writeData(p structs.Point) (int, error) {
 		store.Unlock()
 	}()
 
-	data := encodePoint(p)
+	data, err := encodePoint(p)
+
+	if err != nil {
+		return 0, err
+	}
+
 	return store.fd.Write(data)
 
 }
@@ -33,10 +38,13 @@ func updateIdx(p structs.Point) error {
 func updateCaches(p structs.Point) error {
 	return errors.New("not implemented")
 }
+*/
 
-func WritePoint(p *structs.Point) error {
+func WritePoint(p structs.Point) error {
 
-	return nil /*
+	return nil
+
+	/*
 		// We love locks :allthethings:
 		store.Lock()
 
@@ -70,20 +78,6 @@ func WritePoint(p *structs.Point) error {
 	*/
 }
 
-func validate(path string) error {
-
-	if ok, err := utils.DirExists(path); !ok {
-		return err
-	}
-
-	if ok := utils.Writable(path); !ok {
-		return errors.New("unable to write to path")
-	}
-
-	return nil
-
-}
-
 func Init(path string) error {
 
 	metadata, err := InitMetadata(path)
@@ -92,7 +86,7 @@ func Init(path string) error {
 		return err
 	}
 
-	fd, err := os.OpenFile("data", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
+	fd, err := os.OpenFile(path+"/data", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
 
 	if err != nil {
 		return err
@@ -116,7 +110,6 @@ func InitMetadata(path string) (*Metadata, error) {
 		return nil, errors.New(path + " is not writable")
 	} else if !ok {
 
-		fmt.Println("Zef")
 		if err := os.Mkdir(path, 644); err != nil {
 			return nil, err
 		}

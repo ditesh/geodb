@@ -1,11 +1,8 @@
 package utils
 
 import (
-	"errors"
-	"fmt"
 	"geodb/structs"
 	"io/ioutil"
-	"math"
 	"os"
 
 	"golang.org/x/sys/unix"
@@ -24,8 +21,6 @@ func exists(path string, checkdir bool) (bool, error) {
 	if checkdir {
 		return mode.IsDir(), err
 	}
-
-	fmt.Println(path, mode.IsRegular())
 
 	return mode.IsRegular(), err
 
@@ -80,17 +75,4 @@ func RunTableTests(tests []structs.TableTest, t func(format string, args ...inte
 
 	}
 
-}
-
-// ExtractBits extracts bits from a specific offset and length from a number
-func ExtractBits(val interface{}, offset uint8, length uint8) (interface{}, error) {
-
-	switch num := val.(type) {
-	default:
-		return uint8(0), errors.New("invalid number type")
-	case uint8:
-		return uint8((num & uint8(math.Pow(2, float64(8-offset))-1)) >> (8 - offset - length)), nil
-	case uint32:
-		return uint32((num & uint32(math.Pow(2, float64(32-offset))-1)) >> (32 - offset - length)), nil
-	}
 }

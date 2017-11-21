@@ -12,10 +12,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-func (s *wrapper) Read(ctx context.Context, p *Point) (*WriteRequest, error) {
-	return &WriteRequest{P: p, Blob: "blob"}, nil
-}
-
 func (s *wrapper) Write(ctx context.Context, in *WriteRequest) (*Empty, error) {
 
 	p := structs.Point{
@@ -24,7 +20,7 @@ func (s *wrapper) Write(ctx context.Context, in *WriteRequest) (*Empty, error) {
 		Elv: in.P.Elv,
 	}
 
-	err := storage.WritePoint(p)
+	err := storage.WritePoint(p, in.Blob)
 
 	if err != nil {
 		return nil, err

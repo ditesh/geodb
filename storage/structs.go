@@ -16,3 +16,11 @@ type Metadata struct {
 	lastpos uint64
 	sync.RWMutex
 }
+
+// PointRecord to serialise to disk
+type PointRecord struct {
+	uuid    []byte
+	bloblen []byte
+	point   []byte
+	blob    []byte
+}

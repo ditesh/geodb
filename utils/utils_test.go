@@ -131,7 +131,7 @@ func TestRunTableTests(t *testing.T) {
 
 func TestCreateTestDirs(t *testing.T) {
 
-	dirs, err := CreateTestDirs(10, "utilstest")
+	dirs, err := CreateTestDirs(10)
 
 	if err != nil {
 		t.Fatal("expected no errors but received one")

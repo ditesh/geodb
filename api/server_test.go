@@ -63,7 +63,7 @@ func TestListen(t *testing.T) {
 
 func TestWrite(t *testing.T) {
 
-	dirs, err := utils.CreateTestDirs(1, "api")
+	dirs, err := utils.CreateTestDirs(1)
 
 	if err != nil {
 		t.Fatal("unable to create tempdir")

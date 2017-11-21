@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"geodb/structs"
 	"geodb/utils"
 	"io/ioutil"
@@ -10,7 +11,7 @@ import (
 
 func TestInit(t *testing.T) {
 
-	tmpdirs, err := utils.CreateTestDirs(2, "geodb")
+	tmpdirs, err := utils.CreateTestDirs(2)
 
 	if err != nil {
 		t.Fatal("unable to create test dirs")
@@ -47,6 +48,38 @@ func TestInit(t *testing.T) {
 			t.Errorf("in: '%s', exp: %t, out: %t", tt.in, tt.exp, !tt.exp)
 		}
 
+	}
+
+}
+
+func TestInvalidOpenFile(t *testing.T) {
+
+	oldOpenFile := openFile
+	defer func() { openFile = oldOpenFile }()
+
+	openFile = func(name string, flag int, perm os.FileMode) (*os.File, error) {
+		return nil, errors.New("invalid openFile call")
+	}
+
+	tmpdirs, err := utils.CreateTestDirs(1)
+
+	if err != nil {
+		t.Fatal("unable to create test dirs")
+	}
+
+	err = Init(tmpdirs[0])
+	defer func() {
+		for _, dir := range tmpdirs {
+			err := os.RemoveAll(dir)
+
+			if err != nil {
+				t.Errorf("unable to remove test dir: %s", dir)
+			}
+		}
+	}()
+
+	if err == nil {
+		t.Error("expected an error but got none")
 	}
 
 }
@@ -110,7 +143,7 @@ func TestInitMetadata(t *testing.T) {
 
 func TestWritePoint(t *testing.T) {
 
-	dirs, err := utils.CreateTestDirs(1, "storage")
+	dirs, err := utils.CreateTestDirs(1)
 
 	if err != nil {
 		t.Fatal("unable to create tempdir")
@@ -137,7 +170,7 @@ func TestWritePoint(t *testing.T) {
 		Elv: 10,
 	}
 
-	err = WritePoint(p)
+	err = WritePoint(p, "{}")
 
 	if err != nil {
 		t.Error("invalid return value")

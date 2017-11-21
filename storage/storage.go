@@ -8,6 +8,7 @@ import (
 )
 
 var store *Store
+var openFile = os.OpenFile
 
 func writeData(data []byte) error {
 
@@ -23,20 +24,20 @@ func writeData(data []byte) error {
 
 }
 
-func WritePoint(p structs.Point) error {
+func WritePoint(p structs.Point, blob string) error {
 
-	// Serialize point to a sequence of bytes
-	data, err := encodePoint(p)
+	pr, err := NewPointRecord(p, blob)
 
 	if err != nil {
 		return err
 	}
 
-	if err := writeData(data); err != nil {
+	if err := writeData(pr.Prep()); err != nil {
 		return err
 	}
 
 	return nil
+
 }
 
 func Init(path string) error {
@@ -49,7 +50,7 @@ func Init(path string) error {
 
 	// O_CREATE: create a file if non-exists
 	// O_RDWR: open the file in read-write mode
-	fd, err := os.OpenFile(path+"/data", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
+	fd, err := openFile(path+"/data", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
 
 	if err != nil {
 		return err

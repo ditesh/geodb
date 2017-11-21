@@ -1,9 +1,6 @@
 package utils
 
 import (
-	"fmt"
-	"geodb/structs"
-	"io/ioutil"
 	"os"
 
 	"golang.org/x/sys/unix"
@@ -27,32 +24,6 @@ func exists(path string, checkdir bool) (bool, error) {
 
 }
 
-// CreateTestDirs creates a set of test dirs and
-func CreateTestDirs(n int, prefix string) ([]string, error) {
-
-	retval := make([]string, n)
-
-	for i := 0; i < n; i++ {
-
-		tmpdir, err := ioutil.TempDir("", prefix)
-
-		if err != nil {
-
-			for _, dir := range retval {
-				if err := os.RemoveAll(dir); err != nil {
-					fmt.Println("unable to remove test dirs")
-				}
-			}
-		}
-
-		retval[i] = tmpdir
-
-	}
-
-	return retval, nil
-
-}
-
 // DirExists checks whether a given filesystem direcotyr exists
 func DirExists(path string) (bool, error) {
 	return exists(path, true)
@@ -66,16 +37,4 @@ func FileExists(path string) (bool, error) {
 // Writable checks whether a given filesystem path is writable
 func Writable(path string) bool {
 	return unix.Access(path, unix.W_OK) == nil
-}
-
-func RunTableTests(tests []structs.TableTest, t func(format string, args ...interface{}), f func(string) bool) {
-
-	for _, tt := range tests {
-
-		if ok := f(tt.In); ok != tt.Out {
-			t("in: %s, out: %t, got: %t", tt.In, tt.Out, ok)
-		}
-
-	}
-
 }

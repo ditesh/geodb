@@ -1,4 +1,4 @@
-package storage
+package geometry
 
 import (
 	"math"
@@ -13,7 +13,7 @@ func extract8Bits(num int8, offset uint8, length uint8) uint8 {
 		panic("invalid length or offset")
 	}
 
-	return uint8((uint8(num) & uint8(math.Pow(2, float64(8-offset))-1)) >> (8 - offset - length))
+	return uint8(num) & uint8(math.Pow(2, float64(8-offset))-1) >> (8 - offset - length)
 
 }
 
@@ -25,6 +25,6 @@ func extract32Bits(num int32, offset uint8, length uint8) uint32 {
 		panic("invalid length or offset")
 	}
 
-	return uint32((uint32(num) & uint32(math.Pow(2, float64(32-offset))-1)) >> (32 - offset - length))
+	return uint32(num) & uint32(math.Pow(2, float64(32-offset))-1) >> (32 - offset - length)
 
 }

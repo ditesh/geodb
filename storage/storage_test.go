@@ -2,36 +2,20 @@ package storage
 
 import (
 	"errors"
-	"geodb/structs"
-	"geodb/utils"
-	"io/ioutil"
+	"geodb/testhelpers"
 	"os"
 	"testing"
 )
 
+var e = testhelpers.Error{}
+
 func TestInit(t *testing.T) {
 
-	tmpdirs, err := utils.CreateTestDirs(2)
+	h := testhelpers.Fs{T: t}
+	tmpdirs, cb := h.CreateTestDirs(2)
+	defer cb()
 
-	if err != nil {
-		t.Fatal("unable to create test dirs")
-	}
-
-	defer func() {
-		for _, dir := range tmpdirs {
-			err := os.RemoveAll(dir)
-
-			if err != nil {
-				t.Errorf("unable to remove test dir: %s", dir)
-			}
-		}
-	}()
-
-	err = os.Chmod(tmpdirs[0], 0400)
-
-	if err != nil {
-		t.Fatal("unable to set perms on test dir")
-	}
+	h.Chmod(tmpdirs[0], 0400)
 
 	tests := []struct {
 		in  string
@@ -42,10 +26,10 @@ func TestInit(t *testing.T) {
 		{tmpdirs[1], true},
 	}
 
-	for _, tt := range tests {
+	for k, tt := range tests {
 
 		if err := Init(tt.in); (err == nil) != tt.exp {
-			t.Errorf("in: '%s', exp: %t, out: %t", tt.in, tt.exp, !tt.exp)
+			e.Errorf(t, k, "in: '%s', exp: %t, out: %t", tt.in, tt.exp, !tt.exp)
 		}
 
 	}
@@ -54,6 +38,8 @@ func TestInit(t *testing.T) {
 
 func TestInvalidOpenFile(t *testing.T) {
 
+	h := testhelpers.Fs{T: t}
+
 	oldOpenFile := openFile
 	defer func() { openFile = oldOpenFile }()
 
@@ -61,119 +47,104 @@ func TestInvalidOpenFile(t *testing.T) {
 		return nil, errors.New("invalid openFile call")
 	}
 
-	tmpdirs, err := utils.CreateTestDirs(1)
+	tmpdirs, cb := h.CreateTestDirs(1)
+	defer cb()
 
-	if err != nil {
-		t.Fatal("unable to create test dirs")
-	}
-
-	err = Init(tmpdirs[0])
-	defer func() {
-		for _, dir := range tmpdirs {
-			err := os.RemoveAll(dir)
-
-			if err != nil {
-				t.Errorf("unable to remove test dir: %s", dir)
-			}
-		}
-	}()
-
-	if err == nil {
-		t.Error("expected an error but got none")
+	if err := Init(tmpdirs[0]); err == nil {
+		e.Errorf(t, 0, "expected an error but got none")
 	}
 
 }
 
 func TestInitMetadata(t *testing.T) {
 
-	tmpdir, err := ioutil.TempDir("", "geodbtestdir")
+	h := testhelpers.Fs{T: t}
+	tmpdir, cb := h.CreateTestDirs(1)
+	defer cb()
 
-	if err != nil {
-		t.Fatal("unable to create tmpdir: " + err.Error())
-	}
-
-	tmpfd, err := ioutil.TempFile("", "geodbtestfile")
-
-	if err != nil {
-		t.Error("unable to create tmpfile: " + err.Error())
-	}
-
-	tmpfile := tmpfd.Name()
-
-	defer func() {
-
-		err := tmpfd.Close()
-
-		if err != nil {
-			t.Error("unable to close tmpfd")
-		}
-
-		err = os.RemoveAll(tmpdir)
-
-		if err != nil {
-			t.Errorf("unable to removeall: %s", tmpdir)
-		}
-
-		err = os.RemoveAll(tmpfile)
-
-		if err != nil {
-			t.Errorf("unable to removeall: %s", tmpdir)
-		}
-
-	}()
+	tmpfd, cb := h.CreateTestFiles(1)
+	defer cb()
 
 	tests := []struct {
 		in  string
 		exp bool
 	}{
 		{"", false},
-		{tmpdir, true},
-		{tmpfile, false},
+		{tmpdir[0], true},
+		{tmpfd[0].Name(), false},
 	}
 
-	for _, tt := range tests {
+	for k, tt := range tests {
 
 		if _, err := InitMetadata(tt.in); (err == nil) != tt.exp {
-			t.Errorf("in: '%s', exp: %t, out: %t", tt.in, tt.exp, !tt.exp)
+			e.Errorf(t, k, "in: '%s', exp: %t, out: %t", tt.in, tt.exp, !tt.exp)
 		}
+	}
+}
 
+func TestWrite(t *testing.T) {
+
+	fs := &testhelpers.Fs{T: t}
+	fd, cb := fs.CreateTestFiles(1)
+	defer cb()
+
+	store = &Store{
+		fd: fd[0],
+		metadata: &Metadata{
+			lastpos: 0,
+		},
+	}
+
+	tests := [][]byte{
+		[]byte{57, 52, 48, 54, 98, 100, 97, 56, 45, 52, 49, 98, 57, 45, 52, 0, 128, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0},
+		[]byte{102, 97, 52, 101, 51, 100, 100, 54, 45, 54, 55, 98, 56, 45, 52, 0, 128, 0, 0, 24, 0, 0, 0, 128, 0, 123, 125, 0, 0, 0},
+	}
+
+	for k, v := range tests {
+
+		if err := Write(v); err != nil {
+			e.Errorf(t, k, "write failed")
+		}
 	}
 
 }
 
 func TestWritePoint(t *testing.T) {
 
-	dirs, err := utils.CreateTestDirs(1)
-
-	if err != nil {
-		t.Fatal("unable to create tempdir")
-	}
-
-	err = Init(dirs[0])
-	defer func() {
-
-		err := os.RemoveAll(dirs[0])
+	/*
+		tmpdirs, err := utils.CreateTestDirs(1)
 
 		if err != nil {
-			t.Error("unable to remove tempdir")
+			t.Fatal("unable to create tempdir")
 		}
 
-	}()
+		defer func() {
 
-	if err != nil {
-		t.Fatal("unable to initialise tempdir")
-	}
+			err := utils.RemoveTestDirs(tmpdirs)
 
-	p := structs.Point{
-		Lat: 10,
-		Lng: 10,
-		Elv: 10,
-	}
+			if err != nil {
+				t.Errorf("unable to remove testdir: %s", err.Error())
+			}
+		}()
 
-	err = WritePoint(p, "{}")
+		err = Init(tmpdirs[0])
 
-	if err != nil {
-		t.Error("invalid return value")
-	}
+		if err != nil {
+			t.Fatal("unable to initialise tempdir")
+		}
 
+		p := geometry.Point{
+			Lat:  10,
+			Lng:  10,
+			Elv:  10,
+			Blob: "{}",
+		}
+
+		err = p.Write()
+
+		if err != nil {
+			t.Error("invalid return value")
+		}
+
+	*/
 }

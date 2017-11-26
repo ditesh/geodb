@@ -1,10 +1,56 @@
-package storage
+package geometry
 
 import (
 	"errors"
-	"geodb/structs"
+	"geodb/storage"
 	"math"
 )
+
+var storageWrite = storage.Write
+
+// Write writes a point to the storage layer
+func (p *Point) Write() error {
+
+	pr, err := newRecord(*p)
+
+	if err != nil {
+		return err
+	}
+
+	if err := storageWrite(toBytes(pr)); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+// Encode encodes a point struct into a 9 byte array using the following mechanism:
+// Bit 1: whether latitude is positive (1) or negative (0)
+// Bit 2-28: latitude
+// Bit 29: whether longitude is positive (1) or negative (0)
+// Bit 30-57: longitude from 0-180 degrees
+// Bit 58-72: elevation
+func (p *Point) Encode() ([]byte, error) {
+
+	var err error
+	retval := make([]byte, 9)
+
+	if retval, err = encodeLat(p.Lat, retval); err != nil {
+		return nil, err
+	}
+
+	if retval, err = encodeLng(p.Lng, retval); err != nil {
+		return nil, err
+	}
+
+	if retval, err = encodeElv(p.Elv, retval); err != nil {
+		return nil, err
+	}
+
+	return retval, nil
+
+}
 
 // Basic rules when conversing with this code
 // 1. Bits offsets are from right to left
@@ -44,6 +90,7 @@ func encodeLat(lat int32, data []byte) ([]byte, error) {
 
 }
 
+// encodeLat encodes a latitude to a byte array
 // encodeLng encodes longitude as follows:
 // Bit 29: whether longitude is positive (1) or negative (0)
 // Bit 30-57: longitude from 0-180 degrees
@@ -69,11 +116,11 @@ func encodeLng(lng int32, data []byte) ([]byte, error) {
 
 	}
 
-	retval[3] = byte(retval[3] | byte(extract32Bits(lng, 3, 4))) // bits 29-32: longitude except bit 29
-	retval[4] = byte(extract32Bits(lng, 7, 8))                   // bits 33-40: longitude
-	retval[5] = byte(extract32Bits(lng, 15, 8))                  // bits 41-48: longitude
-	retval[6] = byte(extract32Bits(lng, 23, 8))                  // bits 49-56: longitude
-	retval[7] = byte(extract32Bits(lng, 31, 1) << 7)             // bit 57: longitude
+	retval[3] = retval[3] | byte(extract32Bits(lng, 3, 4)) // bits 29-32: longitude except bit 29
+	retval[4] = byte(extract32Bits(lng, 7, 8))             // bits 33-40: longitude
+	retval[5] = byte(extract32Bits(lng, 15, 8))            // bits 41-48: longitude
+	retval[6] = byte(extract32Bits(lng, 23, 8))            // bits 49-56: longitude
+	retval[7] = byte(extract32Bits(lng, 31, 1) << 7)       // bit 57: longitude
 
 	return retval, nil
 
@@ -91,36 +138,8 @@ func encodeElv(elv int32, data []byte) ([]byte, error) {
 		return retval, errors.New("invalid elevation")
 	}
 
-	retval[7] = byte(retval[7] | byte(extract32Bits(elv, 17, 7))) // bits 58-64: elevation
-	retval[8] = byte(extract32Bits(elv, 24, 8))                   // bits 65-72: elevation
-
-	return retval, nil
-
-}
-
-// Encodes a point struct into a 9 byte array using the following mechanism:
-// Bit 1: whether latitude is positive (1) or negative (0)
-// Bit 2-28: latitude
-// Bit 29: whether longitude is positive (1) or negative (0)
-// Bit 30-57: longitude from 0-180 degrees
-// Bit 58-72: elevation
-
-func encodePoint(p structs.Point) ([]byte, error) {
-
-	var err error
-	retval := make([]byte, 9, 9)
-
-	if retval, err = encodeLat(p.Lat, retval); err != nil {
-		return nil, err
-	}
-
-	if retval, err = encodeLng(p.Lng, retval); err != nil {
-		return nil, err
-	}
-
-	if retval, err = encodeElv(p.Elv, retval); err != nil {
-		return nil, err
-	}
+	retval[7] = retval[7] | byte(extract32Bits(elv, 17, 7)) // bits 58-64: elevation
+	retval[8] = byte(extract32Bits(elv, 24, 8))             // bits 65-72: elevation
 
 	return retval, nil
 
@@ -185,9 +204,9 @@ func decodeElv(data []byte) int32 {
 }
 
 // decodePoint decodes the bytestring and an entire point struct
-func decodePoint(data []byte) (structs.Point, error) {
+func decodePoint(data []byte) (Point, error) {
 
-	var p structs.Point
+	var p Point
 	var err error
 
 	p.Lat, err = decodeLat(data)

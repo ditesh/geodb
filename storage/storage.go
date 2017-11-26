@@ -1,8 +1,8 @@
 package storage
 
 import (
+	"encoding/binary"
 	"errors"
-	"geodb/structs"
 	"geodb/utils"
 	"os"
 )
@@ -10,7 +10,7 @@ import (
 var store *Store
 var openFile = os.OpenFile
 
-func writeData(data []byte) error {
+func write(data []byte) error {
 
 	store.Lock()
 	defer func() {
@@ -24,22 +24,18 @@ func writeData(data []byte) error {
 
 }
 
-func WritePoint(p structs.Point, blob string) error {
+// Write receives a generic record, prepends overall length,
+// and writes it to disk
+func Write(record []byte) error {
 
-	pr, err := NewPointRecord(p, blob)
+	headerlen := make([]byte, binary.MaxVarintLen32)
+	binary.PutUvarint(headerlen, uint64(len(record)))
 
-	if err != nil {
-		return err
-	}
-
-	if err := writeData(pr.Prep()); err != nil {
-		return err
-	}
-
-	return nil
+	return write(append(headerlen, record...))
 
 }
 
+// Init initialises the storage structs
 func Init(path string) error {
 
 	metadata, err := InitMetadata(path)
@@ -74,6 +70,7 @@ func Init(path string) error {
 
 }
 
+// InitMetadata initialises the metadata struct
 func InitMetadata(path string) (*Metadata, error) {
 
 	ok, _ := utils.DirExists(path)
@@ -82,7 +79,7 @@ func InitMetadata(path string) (*Metadata, error) {
 		return nil, errors.New(path + " is not writable")
 	} else if !ok {
 
-		if err := os.Mkdir(path, 644); err != nil {
+		if err := os.Mkdir(path, 0644); err != nil {
 			return nil, err
 		}
 	}

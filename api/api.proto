@@ -3,7 +3,7 @@ package api;
 
 // API definition
 service API {
-    rpc Write(WriteRequest) returns (Empty) {}
+    rpc WritePoint(WritePointRequest) returns (Empty) {}
 }
 
 message Empty {}
@@ -14,7 +14,7 @@ message Point {
   int32 elv = 3;
 }
 
-message WriteRequest {
+message WritePointRequest {
     Point p = 1;
     string blob = 2;
 }

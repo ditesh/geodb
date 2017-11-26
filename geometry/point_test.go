@@ -1,8 +1,9 @@
-package storage
+package geometry
 
 import (
 	"bytes"
-	"geodb/structs"
+	"errors"
+	"geodb/storage"
 	"testing"
 )
 
@@ -27,20 +28,17 @@ func TestEncodeLat(t *testing.T) {
 		{-90000000, []byte{85, 212, 168, 0, 0, 0, 0, 0, 0}}, // boundary case
 	}
 
-	var bitstr []byte
-
 	for _, tt := range tests {
 
-		bitstr = make([]byte, 9)
+		bitstr := make([]byte, 9)
 
-		if bitstr, _ := encodeLat(tt.in, bitstr); bytes.Compare(tt.exp, bitstr) != 0 {
+		if bitstr, _ = encodeLat(tt.in, bitstr); !bytes.Equal(tt.exp, bitstr) {
 			t.Errorf("in: %d, exp: %d, out: %d", tt.in, tt.exp, bitstr)
 		}
 	}
 
+	var bitstr []byte
 	// Test boundary cases
-	bitstr = make([]byte, 9)
-
 	if _, err := encodeLat(90000001, bitstr); err == nil {
 		t.Errorf("expected error but received none")
 	}
@@ -68,20 +66,18 @@ func TestEncodeLng(t *testing.T) {
 		{-180000000, []byte{212, 224, 132, 101, 93, 74, 128, 0, 0}}, // boundary case
 	}
 
-	bitstr := make([]byte, 9)
-
 	for _, tt := range tests {
 
 		// Assume the input is 89000006
-		bitstr = []byte{212, 224, 132, 96, 0, 0, 0, 0, 0}
+		bitstr := []byte{212, 224, 132, 96, 0, 0, 0, 0, 0}
 
-		if bitstr, _ := encodeLng(tt.in, bitstr); bytes.Compare(tt.exp, bitstr) != 0 {
+		if bitstr, _ = encodeLng(tt.in, bitstr); !bytes.Equal(tt.exp, bitstr) {
 			t.Errorf("in: %d, exp: %d, out: %d", tt.in, tt.exp, bitstr)
 		}
 	}
 
 	// Test boundary cases
-	bitstr = []byte{212, 224, 132, 96, 0, 0, 0, 0, 0}
+	bitstr := []byte{212, 224, 132, 96, 0, 0, 0, 0, 0}
 
 	if _, err := encodeLng(180000001, bitstr); err == nil {
 		t.Errorf("expected error but received none")
@@ -105,20 +101,18 @@ func TestEncodeElv(t *testing.T) {
 		{32767, []byte{212, 224, 132, 106, 167, 4, 35, 127, 255}}, // boundary case
 	}
 
-	bitstr := make([]byte, 9)
-
 	for _, tt := range tests {
 
 		// Assume the input is 89000006
-		bitstr = []byte{212, 224, 132, 106, 167, 4, 35, 0, 0}
+		bitstr := []byte{212, 224, 132, 106, 167, 4, 35, 0, 0}
 
-		if bitstr, _ := encodeElv(tt.in, bitstr); bytes.Compare(tt.exp, bitstr) != 0 {
+		if bitstr, _ = encodeElv(tt.in, bitstr); !bytes.Equal(tt.exp, bitstr) {
 			t.Errorf("in: %d, exp: %d, out: %d", tt.in, tt.exp, bitstr)
 		}
 	}
 
 	// Test boundary cases
-	bitstr = []byte{212, 224, 132, 106, 167, 4, 35, 0, 0}
+	bitstr := []byte{212, 224, 132, 106, 167, 4, 35, 0, 0}
 
 	if _, err := encodeElv(32769, bitstr); err == nil {
 		t.Errorf("expected error but received none")
@@ -132,33 +126,33 @@ func TestEncodeElv(t *testing.T) {
 
 func TestEncodePoint(t *testing.T) {
 
-	p := structs.Point{
+	p := &Point{
 		Lat: 10,
 		Lng: 10,
 		Elv: 10,
 	}
 
-	if _, err := encodePoint(p); err != nil {
+	if _, err := p.Encode(); err != nil {
 		t.Error("encoded 0,0,0, received err")
 	}
 
 	p.Lat = 90000001
 
-	if _, err := encodePoint(p); err == nil {
+	if _, err := p.Encode(); err == nil {
 		t.Error("encoded invalid lat, received no err")
 	}
 
 	p.Lat = 0
 	p.Lng = 180000001
 
-	if _, err := encodePoint(p); err == nil {
+	if _, err := p.Encode(); err == nil {
 		t.Error("encoded invalid lng, received no err")
 	}
 
 	p.Lng = 0
 	p.Elv = 32769
 
-	if _, err := encodePoint(p); err == nil {
+	if _, err := p.Encode(); err == nil {
 		t.Error("encoded invalid elv, received no err")
 	}
 
@@ -178,9 +172,7 @@ func TestDecodeLat(t *testing.T) {
 	}
 
 	bytestr = []byte{85, 212, 168, 16, 0, 0, 0, 0}
-	lat, err = decodeLat(bytestr)
-
-	if err == nil {
+	if _, err = decodeLat(bytestr); err == nil {
 		t.Error("able to decode invalid latitude")
 	}
 
@@ -200,9 +192,8 @@ func TestDecodeLng(t *testing.T) {
 	}
 
 	bytestr = []byte{212, 224, 132, 109, 93, 74, 128, 128, 0}
-	lng, err = decodeLng(bytestr)
 
-	if err == nil {
+	if _, err = decodeLng(bytestr); err == nil {
 		t.Error("able to decode invalid longitude")
 	}
 
@@ -254,7 +245,7 @@ func TestEncodeDecodePoint(t *testing.T) {
 		{-90000000, -180000000, 32767}, // boundary case
 	}
 
-	p := structs.Point{
+	p := Point{
 		Lat: 0,
 		Lng: 0,
 		Elv: 0,
@@ -262,13 +253,13 @@ func TestEncodeDecodePoint(t *testing.T) {
 
 	for _, tt := range tests {
 
-		p = structs.Point{
+		p = Point{
 			Lat: tt.lat,
 			Lng: tt.lng,
 			Elv: tt.elv,
 		}
 
-		ep, err := encodePoint(p)
+		ep, err := p.Encode()
 
 		if err != nil {
 			t.Fatal("unable to encode valid point")
@@ -288,4 +279,65 @@ func TestEncodeDecodePoint(t *testing.T) {
 			t.Error("input elv is not equal to output elv")
 		}
 	}
+}
+
+func TestWrite(t *testing.T) {
+
+	tests := []struct {
+		lat  int32
+		lng  int32
+		elv  int32
+		blob string
+		exp  bool
+	}{
+		{0, 0, 0, "{}", true},
+		{90000000, 180000000, 32767, "{}", true},   // boundary case
+		{-90000000, -180000000, 32767, "{}", true}, // boundary case
+		{90000001, 1800000001, 32767, "{}", false},
+		{-90000001, -180000001, 32767, "{}", false},
+	}
+
+	oldStorageWrite := storage.Write
+	defer func() {
+		storageWrite = oldStorageWrite
+	}()
+
+	storageWrite = func(record []byte) error {
+		return nil
+	}
+
+	for k, tt := range tests {
+
+		p := &Point{
+			Lat:  tt.lat,
+			Lng:  tt.lng,
+			Elv:  tt.elv,
+			Blob: tt.blob,
+		}
+
+		err := p.Write()
+
+		if (err == nil) != tt.exp {
+			e.Errorf(t, k, "mismatched err expectations")
+		}
+
+	}
+
+	storageWrite = func(record []byte) error {
+		return errors.New("error")
+	}
+
+	p := &Point{
+		Lat:  1,
+		Lng:  1,
+		Elv:  1,
+		Blob: "{}",
+	}
+
+	err := p.Write()
+
+	if err == nil {
+		e.Errorf(t, 3, "expected error but did not receive any")
+	}
+
 }

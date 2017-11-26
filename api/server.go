@@ -2,9 +2,8 @@ package api
 
 import (
 	fmt "fmt"
+	"geodb/geometry"
 	"geodb/logger"
-	"geodb/storage"
-	"geodb/structs"
 	"net"
 
 	context "golang.org/x/net/context"
@@ -12,15 +11,16 @@ import (
 	"google.golang.org/grpc"
 )
 
-func (s *wrapper) Write(ctx context.Context, in *WriteRequest) (*Empty, error) {
+func (s *wrapper) WritePoint(ctx context.Context, in *WritePointRequest) (*Empty, error) {
 
-	p := structs.Point{
-		Lat: in.P.Lat,
-		Lng: in.P.Lng,
-		Elv: in.P.Elv,
+	point := &geometry.Point{
+		Lat:  in.P.Lat,
+		Lng:  in.P.Lng,
+		Elv:  in.P.Elv,
+		Blob: in.Blob,
 	}
 
-	err := storage.WritePoint(p, in.Blob)
+	err := point.Write()
 
 	if err != nil {
 		return nil, err
@@ -43,6 +43,7 @@ func listen(port int) (net.Listener, error) {
 
 }
 
+// Start starts the grpc server
 func (s *Server) Start() error {
 
 	lis, err := listen(s.Config.Port)

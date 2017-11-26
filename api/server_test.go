@@ -4,8 +4,7 @@ import (
 	"geodb/config"
 	"geodb/logger"
 	"geodb/storage"
-	"geodb/utils"
-	"os"
+	"geodb/testhelpers"
 	"testing"
 
 	context "golang.org/x/net/context"
@@ -63,24 +62,14 @@ func TestListen(t *testing.T) {
 
 func TestWrite(t *testing.T) {
 
-	dirs, err := utils.CreateTestDirs(1)
-
-	if err != nil {
-		t.Fatal("unable to create tempdir")
+	fs := &testhelpers.Fs{
+		T: t,
 	}
 
-	err = storage.Init(dirs[0])
-	defer func() {
+	dirs, cb := fs.CreateTestDirs(1)
+	defer cb()
 
-		err := os.RemoveAll(dirs[0])
-
-		if err != nil {
-			t.Error("unable to remove tempdir")
-		}
-
-	}()
-
-	if err != nil {
+	if err := storage.Init(dirs[0]); err != nil {
 		t.Fatal("unable to initialise tempdir")
 	}
 
@@ -90,14 +79,14 @@ func TestWrite(t *testing.T) {
 		Elv: 0,
 	}
 
-	wr := &WriteRequest{
+	wr := &WritePointRequest{
 		P:    p,
 		Blob: "test",
 	}
 
 	s := &wrapper{}
 
-	if _, err := s.Write(context.Background(), wr); err != nil {
+	if _, err := s.WritePoint(context.Background(), wr); err != nil {
 		t.Error("unable to write point")
 	}
 }

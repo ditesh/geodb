@@ -23,16 +23,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
-	defer func() {
-		err := conn.Close()
 
-		if err != nil {
+	defer func() {
+
+		closeErr := conn.Close()
+
+		if closeErr != nil {
 			log.Fatal("unable to close connection")
 		}
 	}()
 
 	c := api.NewAPIClient(conn)
-	_, err = c.Write(context.Background(), &api.WriteRequest{P: p, Blob: "this is the potato"})
+	_, err = c.WritePoint(context.Background(), &api.WritePointRequest{P: p, Blob: "this is the potato"})
 
 	if err != nil {
 		log.Fatalf("could not connect: (%v)", err)

@@ -1,9 +1,8 @@
 package logger
 
 import (
-	"fmt"
 	"geodb/config"
-	"io/ioutil"
+	"geodb/testhelpers"
 	"log"
 	"os"
 	"testing"
@@ -49,59 +48,36 @@ func runTests(tests []tableTests, t *testing.T) {
 
 func TestConfigure(t *testing.T) {
 
-	// Test dir setup
-	dir, err := ioutil.TempDir("", "configtest")
+	fs := &testhelpers.Fs{T: t}
 
-	if err != nil {
-		t.Fatal("unable to create temp dir")
-		return
-	}
+	// Test dir setup
+	dir, cb := fs.CreateTestDirs(2)
+	defer cb()
 
 	tests := []tableTests{
 		{[]string{"", "", ""}, false},
 		{[]string{"syslog", "", ""}, false},
 		{[]string{"file", "", ""}, false},
 		{[]string{"file", "", "debug"}, false},
-		{[]string{"file", dir, "debug"}, true},
+		{[]string{"file", dir[0], "debug"}, true},
 		{[]string{"discard", "", "debug"}, true},
 	}
 
 	runTests(tests, t)
 
-	// Remove temporary dir
-	if err := os.RemoveAll(dir); err != nil {
-		fmt.Println("unable to remove " + dir)
-	}
-
-	// Test dir setup
-	dir, err = ioutil.TempDir("", "config-test-2")
-	if err != nil {
-		t.Fatal("unable to create temp dir")
-		return
-	}
-
 	// Make temp dir unwriteable
-	err = os.Chmod(dir, 0400)
-
-	if err != nil {
+	if err := os.Chmod(dir[1], 0400); err != nil {
 		t.Fatal("unable to make temp dir unwriteable")
 	}
 
 	tests = []tableTests{
-		{[]string{"file", dir, "debug"}, false},
+		{[]string{"file", dir[1], "debug"}, false},
 	}
 	runTests(tests, t)
 
 	// Make temp dir writable again
-	err = os.Chmod(dir, 0777)
-
-	if err != nil {
+	if err := os.Chmod(dir[1], 0777); err != nil {
 		t.Fatal("unable to make temp dir unwriteable")
-	}
-
-	// Remove temporary dir
-	if err := os.RemoveAll(dir); err != nil {
-		fmt.Println("unable to remove " + dir)
 	}
 
 }

@@ -2,11 +2,13 @@ package utils
 
 import (
 	"fmt"
-	"geodb/structs"
+	"geodb/testhelpers"
 	"io/ioutil"
 	"os"
 	"testing"
 )
+
+var e = testhelpers.Error{}
 
 func TestFileExists(t *testing.T) {
 
@@ -34,7 +36,10 @@ func TestFileExists(t *testing.T) {
 
 	}()
 
-	tests := []structs.TableTest{
+	tests := []struct {
+		in  string
+		out bool
+	}{
 		{"", false},
 		{".", false},
 		{"I43JSRnnGwzWFJn0TbIWRJW6TddKdMaspC2bENRC", false},
@@ -42,10 +47,12 @@ func TestFileExists(t *testing.T) {
 		{tmpfile, true},
 	}
 
-	RunTableTests(tests, t.Errorf, func(s string) bool {
-		ok, _ := FileExists(s)
-		return ok
-	})
+	for k, tt := range tests {
+
+		if ok, _ := FileExists(tt.in); ok != tt.out {
+			e.Errorf(t, k, "mismatched error expectations")
+		}
+	}
 
 }
 
@@ -65,7 +72,10 @@ func TestDirExists(t *testing.T) {
 		}
 	}()
 
-	tests := []structs.TableTest{
+	tests := []struct {
+		in  string
+		out bool
+	}{
 		{"", false},
 		{".", true},
 		{"I43JSRnnGwzWFJn0TbIWRJW6TddKdMaspC2bENRC", false},
@@ -73,10 +83,12 @@ func TestDirExists(t *testing.T) {
 		{tmpdir, true},
 	}
 
-	RunTableTests(tests, t.Errorf, func(s string) bool {
-		ok, _ := DirExists(s)
-		return ok
-	})
+	for k, tt := range tests {
+
+		if ok, _ := DirExists(tt.in); ok != tt.out {
+			e.Errorf(t, k, "mismatched error expectations")
+		}
+	}
 
 }
 
@@ -104,44 +116,4 @@ func TestWritable(t *testing.T) {
 			t.Error("tmpdir ("+dir+") path should be writable but is not:", err)
 		}
 	}
-}
-
-func TestRunTableTests(t *testing.T) {
-
-	tested := false
-
-	errorF := func(format string, args ...interface{}) {
-		tested = true
-	}
-
-	tests := []structs.TableTest{
-		{"1", true},
-		{"0", false},
-	}
-
-	RunTableTests(tests, errorF, func(in string) bool {
-		return true
-	})
-
-	if tested == false {
-		t.Error("error function was not called")
-	}
-
-}
-
-func TestCreateTestDirs(t *testing.T) {
-
-	dirs, err := CreateTestDirs(10)
-
-	if err != nil {
-		t.Fatal("expected no errors but received one")
-	}
-
-	for _, dir := range dirs {
-
-		if stat, err := os.Stat(dir); err != nil || !stat.IsDir() {
-			t.Errorf("Received %s but its not a valid directory", dir)
-		}
-	}
-
 }

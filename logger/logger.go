@@ -10,6 +10,7 @@ import (
 
 var logger *log.Logger
 
+// Configure configures the logger based on the LoggerConfig
 func Configure(c config.LoggerConfig) error {
 
 	if c.Type == "file" {
@@ -34,10 +35,12 @@ func Configure(c config.LoggerConfig) error {
 
 }
 
+// Error outputs an error string with the given message
 func Error(v ...interface{}) {
 	logger.Print("ERROR:", v)
 }
 
+// Info outputs an error string with the given message
 func Info(v ...interface{}) {
 	logger.Print("INFO:", v)
 }

@@ -24,7 +24,7 @@ func TestParse(t *testing.T) {
 
 		if err := c.Parse(tt.in); (err == nil) != tt.out {
 
-			if tt.out == true {
+			if tt.out {
 				t.Error("expected parsing \"" + tt.in + " to be valid but received an error")
 			} else {
 				t.Error("expected parsing \"" + tt.in + " to be invalid but did not receive an error")

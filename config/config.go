@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// Parse parses a JSON based config file into a config struct
 func (c *Config) Parse(path string) error {
 
 	fd, err := os.Open(path)
@@ -15,10 +16,7 @@ func (c *Config) Parse(path string) error {
 
 	jsonParser := json.NewDecoder(fd)
 
-	if err = jsonParser.Decode(&c); err != nil {
-		return err
-	}
-
-	return nil
+	err = jsonParser.Decode(&c)
+	return err
 
 }

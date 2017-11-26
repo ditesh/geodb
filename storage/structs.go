@@ -5,6 +5,7 @@ import (
 	"sync"
 )
 
+// Store is a wrapper around key storage types
 type Store struct {
 	metadata *Metadata
 	fd       *os.File
@@ -12,15 +13,8 @@ type Store struct {
 	sync.RWMutex
 }
 
+// Metadata is a wrapper around storage metadata
 type Metadata struct {
 	lastpos uint64
 	sync.RWMutex
-}
-
-// PointRecord to serialise to disk
-type PointRecord struct {
-	uuid    []byte
-	bloblen []byte
-	point   []byte
-	blob    []byte
 }
